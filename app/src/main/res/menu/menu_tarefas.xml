@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_pesquisa"
+        android:icon="@drawable/ic_search"
+        android:title="Pesquisa"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView" />
+
+    <item
+        android:icon="@drawable/ic_sort"
+        android:title="Organizar"
+        app:showAsAction="always">
+
+        <menu>
+            <item
+                android:id="@+id/action_sort_by_name"
+                android:title="Organizar Por Nome" />
+
+            <item
+                android:id="@+id/action_sort_by_date"
+                android:title="Organizar Por Data" />
+
+            <item
+                android:id="@+id/action_sort_custom"
+                android:title="Customizado"/>
+        </menu>
+
+    </item>
+
+    <item
+        android:id="@+id/action_esconder"
+        android:checkable="true"
+        android:title="Esconder Completados"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_deletar"
+        android:title="Deletar Completados"
+        app:showAsAction="never"/>
+
+
+</menu>
