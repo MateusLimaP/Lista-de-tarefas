@@ -50,22 +50,27 @@ class AddTarefaViewModel @Inject constructor(
         return "Adicionar Tarefa"
     }
 
-    fun salvarTarefa(nome: String, importante: Boolean, navegacao: () -> Unit){
-        viewModelScope.launch {//
-            if (tipo == TIPO_EDITAR_TAREFA) {
-                repository.atualizarTarefa(tarefa!!.copy(nome = nome, importante = importante))
-                navegacao.invoke()
+    fun salvarTarefa(nome: String, importante: Boolean, navegacao: (AddTarefaEvent) -> Unit){
+        if (nome.isNotBlank()) {
+            viewModelScope.launch {//
+                if (tipo == TIPO_EDITAR_TAREFA) {
+                    repository.atualizarTarefa(tarefa!!.copy(nome = nome, importante = importante))
+                    navegacao.invoke(AddTarefaEvent.NavegarVoltaComResultado(tipo))
+                }
+                if (tipo == TIPO_ADICIONAR_TAREFA) {
+                    val novaTarefa = Tarefa(nome = nome, importante = importante)
+                    repository.addTarefa(novaTarefa)
+                    navegacao.invoke(AddTarefaEvent.NavegarVoltaComResultado(tipo))
+                }
             }
-            if (tipo == TIPO_ADICIONAR_TAREFA){
-                val novaTarefa = Tarefa(nome = nome, importante = importante)
-                repository.addTarefa(novaTarefa)
-                navegacao.invoke()
-            }
+        }else{
+            navegacao.invoke(AddTarefaEvent.MostrarNomeTarefaVazio("Nome vazio"))
         }
     }
 
-    enum class Navegacao{IR_TELA_PRICIPAL, IR_TELA_SECUNDARIA}
-
-
+    sealed class AddTarefaEvent{
+        data class MostrarNomeTarefaVazio(val msg: String) : AddTarefaEvent()
+        data class NavegarVoltaComResultado(val resultado: String) : AddTarefaEvent()
+    }
 
 }

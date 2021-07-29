@@ -8,6 +8,8 @@ import com.mateuslima.listaafazeres.data.db.preference.PreferencesManager
 import com.mateuslima.listaafazeres.data.db.preference.PreferencesManager.Organizar.*
 import com.mateuslima.listaafazeres.util.ORGANIZAR_POR_DATA
 import com.mateuslima.listaafazeres.util.ORGANIZAR_POR_NOME
+import com.mateuslima.listaafazeres.util.TIPO_ADICIONAR_TAREFA
+import com.mateuslima.listaafazeres.util.TIPO_EDITAR_TAREFA
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -69,6 +71,18 @@ class TarefasViewModel @Inject constructor(
         viewModelScope.launch { repository.addTarefa(tarefa) }
     }
 
+    fun onAddEditResult(tipoTarefa: String){
+        when (tipoTarefa){
+            TIPO_ADICIONAR_TAREFA -> mostrarConfirmacaoTarefaSalva("Tarefa salva com sucesso")
+            TIPO_EDITAR_TAREFA -> mostrarConfirmacaoTarefaSalva("Tarefa editada com sucesso")
+        }
+    }
+
+    private fun mostrarConfirmacaoTarefaSalva(msg: String){
+        viewModelScope.launch { //
+            tarefaEventoChannel.send(TarefaEvento.MostrarConfirmacaoTarefaSalva(msg)) }
+    }
+
     fun getListaTarefa()  = tarefa.asLiveData()
 
     fun getTarefaEvento() = tarefaEvento
@@ -83,5 +97,6 @@ class TarefasViewModel @Inject constructor(
 
     sealed class TarefaEvento{
         data class MostrarDesfazerExclusao(val tarefa: Tarefa) : TarefaEvento()
+        data class MostrarConfirmacaoTarefaSalva(val msg: String) : TarefaEvento()
     }
 }

@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -27,6 +28,7 @@ import com.mateuslima.listaafazeres.ui.tarefas.TarefasViewModel.TarefaEvento.*
 import com.mateuslima.listaafazeres.util.TIPO_ADICIONAR_TAREFA
 import com.mateuslima.listaafazeres.util.TIPO_EDITAR_TAREFA
 import com.mateuslima.listaafazeres.util.addOnQueryTextChange
+import com.mateuslima.listaafazeres.util.exhaustive
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.collect
@@ -73,14 +75,25 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
             viewModel.getTarefaEvento().collect { event ->
                 when (event){
                     is MostrarDesfazerExclusao -> snackBarDesfazerExclusao(event.tarefa)
-                }
+                    is MostrarConfirmacaoTarefaSalva -> mostrarSnackBar(event.msg)
+                }.exhaustive
             }
+        }
+
+        setFragmentResultListener("addTarefaFragment"){key, bundle ->
+            val tipoResultado = bundle.getString("tipoSalvo")!!
+            viewModel.onAddEditResult(tipoResultado)
+
         }
 
 
 
 
 
+    }
+
+    private fun mostrarSnackBar(msg: String){
+        Snackbar.make(requireView(), msg, Snackbar.LENGTH_SHORT).show()
     }
 
     private fun snackBarDesfazerExclusao(tarefa: Tarefa){
