@@ -11,6 +11,7 @@ import com.mateuslima.listaafazeres.util.ORGANIZAR_POR_NOME
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.switchMap
 import kotlinx.coroutines.launch
@@ -25,6 +26,10 @@ class TarefasViewModel @Inject constructor(
 
 
     private val pesquisa = MutableStateFlow("")
+
+    private val tarefaEventoChannel = Channel<TarefaEvento>()
+    private val tarefaEvento = tarefaEventoChannel.receiveAsFlow()
+
 
     private var tarefa = combine(pesquisa, preferencesManager.tarefasPreference){ a, b ->
         Wrapper(a, b)
@@ -54,11 +59,19 @@ class TarefasViewModel @Inject constructor(
         viewModelScope.launch(IO) { repository.atualizarTarefa(tarefa.copy(completada = isChecked)) }
     }
 
-    fun deletarTarefa(tarefa: Tarefa){
-        viewModelScope.launch(IO) { repository.deletarTarefa(tarefa)}
+    fun swipeTarefa(tarefa: Tarefa){
+        viewModelScope.launch(IO) { repository.deletarTarefa(tarefa)
+            tarefaEventoChannel.send(TarefaEvento.MostrarDesfazerExclusao(tarefa))
+        }
+    }
+
+    fun desfazerExclusao(tarefa: Tarefa){
+        viewModelScope.launch { repository.addTarefa(tarefa) }
     }
 
     fun getListaTarefa()  = tarefa.asLiveData()
+
+    fun getTarefaEvento() = tarefaEvento
 
     suspend fun marcarTarefaMenu() : Boolean{
         return preferencesManager.tarefasPreference.first().hideTask
@@ -67,4 +80,8 @@ class TarefasViewModel @Inject constructor(
 
 
     data class Wrapper<T1, T2>(val v1: T1, val v2: T2)
+
+    sealed class TarefaEvento{
+        data class MostrarDesfazerExclusao(val tarefa: Tarefa) : TarefaEvento()
+    }
 }

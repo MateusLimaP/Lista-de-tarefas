@@ -13,6 +13,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.mateuslima.listaafazeres.R
 import com.mateuslima.listaafazeres.adapter.ItemTouchHelperAdapter
 import com.mateuslima.listaafazeres.adapter.TarefasAdapter
@@ -20,9 +22,12 @@ import com.mateuslima.listaafazeres.adapter.TarefasAdapter.*
 import com.mateuslima.listaafazeres.data.db.model.Tarefa
 import com.mateuslima.listaafazeres.data.db.preference.PreferencesManager
 import com.mateuslima.listaafazeres.databinding.FragmentTarefasBinding
+import com.mateuslima.listaafazeres.ui.tarefas.TarefasViewModel.TarefaEvento
+import com.mateuslima.listaafazeres.ui.tarefas.TarefasViewModel.TarefaEvento.*
 import com.mateuslima.listaafazeres.util.addOnQueryTextChange
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -61,9 +66,26 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
             adapter.submitList(list)
         }
 
+        lifecycleScope.launchWhenStarted {
+            viewModel.getTarefaEvento().collect { event ->
+                when (event){
+                    is MostrarDesfazerExclusao -> snackBarDesfazerExclusao(event.tarefa)
+                }
+            }
+        }
 
 
 
+
+
+    }
+
+    private fun snackBarDesfazerExclusao(tarefa: Tarefa){
+        Snackbar.make(requireView(), "Tarefa excluida", Snackbar.LENGTH_LONG)
+            .setAction("Desfazer"){
+                viewModel.desfazerExclusao(tarefa)
+            }
+            .show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -113,6 +135,6 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
     }
 
     override fun onTarefaSwiped(tarefa: Tarefa) {
-        viewModel.deletarTarefa(tarefa)
+        viewModel.swipeTarefa(tarefa)
     }
 }
