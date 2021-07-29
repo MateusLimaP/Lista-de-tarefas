@@ -24,6 +24,8 @@ import com.mateuslima.listaafazeres.data.db.preference.PreferencesManager
 import com.mateuslima.listaafazeres.databinding.FragmentTarefasBinding
 import com.mateuslima.listaafazeres.ui.tarefas.TarefasViewModel.TarefaEvento
 import com.mateuslima.listaafazeres.ui.tarefas.TarefasViewModel.TarefaEvento.*
+import com.mateuslima.listaafazeres.util.TIPO_ADICIONAR_TAREFA
+import com.mateuslima.listaafazeres.util.TIPO_EDITAR_TAREFA
 import com.mateuslima.listaafazeres.util.addOnQueryTextChange
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers.IO
@@ -46,7 +48,8 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
         setHasOptionsMenu(true)
 
         binding.fab.setOnClickListener {
-            findNavController().navigate(TarefasFragmentDirections.actionToAddTarefaFragment()) }
+            findNavController().navigate(TarefasFragmentDirections
+                .actionToAddTarefaFragment(tipo = TIPO_ADICIONAR_TAREFA)) }
 
         val adapter = TarefasAdapter(this)
 
@@ -127,7 +130,8 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
     }
 
     override fun onTarefaClicked(tarefa: Tarefa) {
-        Toast.makeText(context, tarefa.nome, Toast.LENGTH_SHORT).show()
+        findNavController().navigate(TarefasFragmentDirections.actionToAddTarefaFragment(
+            tarefa = tarefa, tipo = TIPO_EDITAR_TAREFA))
     }
 
     override fun onTarefaMoved(listaTarefa: List<Tarefa>) {

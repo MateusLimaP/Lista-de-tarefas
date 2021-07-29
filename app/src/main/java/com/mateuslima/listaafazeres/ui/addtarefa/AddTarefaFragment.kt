@@ -2,18 +2,48 @@ package com.mateuslima.listaafazeres.ui.addtarefa
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.navArgs
 import com.mateuslima.listaafazeres.R
 import com.mateuslima.listaafazeres.databinding.FragmentAddTarefaBinding
+import com.mateuslima.listaafazeres.ui.addtarefa.AddTarefaViewModel.Navegacao
+import com.mateuslima.listaafazeres.ui.addtarefa.AddTarefaViewModel.Navegacao.*
+import com.mateuslima.listaafazeres.ui.main.MainActivity
+import com.mateuslima.listaafazeres.util.TIPO_ADICIONAR_TAREFA
+import com.mateuslima.listaafazeres.util.TIPO_EDITAR_TAREFA
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AddTarefaFragment : Fragment(R.layout.fragment_add_tarefa) {
 
     private var _binding: FragmentAddTarefaBinding? = null
     private val binding get() = _binding!!
+    private val viewModel: AddTarefaViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentAddTarefaBinding.bind(view)
+
+        (requireActivity() as AppCompatActivity).supportActionBar?.title = viewModel.tituloToolbar()
+
+        // editar tarefa
+        binding.apply {//
+            editNomeTarefa.setText(viewModel.nomeTarefa())
+            checkBoxImportante.isChecked = viewModel.tarefaImportante()
+            checkBoxImportante.jumpDrawablesToCurrentState()
+            textDataCriada.isVisible = viewModel.dataCriadaVisivel()
+            textDataCriada.text = viewModel.dataCriada()
+
+            fabSalvar.setOnClickListener {//
+                val nome = editNomeTarefa.text.toString()
+                val importante = checkBoxImportante.isChecked
+                viewModel.salvarTarefa(nome, importante){activity?.onBackPressed()}
+            }
+        }
 
     }
 

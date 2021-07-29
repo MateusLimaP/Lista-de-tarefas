@@ -22,5 +22,14 @@
         android:id="@+id/addTarefaFragment"
         tools:layout="@layout/fragment_add_tarefa"
         android:name="com.mateuslima.listaafazeres.ui.addtarefa.AddTarefaFragment"
-        android:label="AddTarefaFragment" />
+        android:label="AddTarefaFragment" >
+        <argument
+            android:name="tarefa"
+            app:argType="com.mateuslima.listaafazeres.data.db.model.Tarefa"
+            android:defaultValue="@null"
+            app:nullable="true" />
+        <argument
+            android:name="tipo"
+            app:argType="string" />
+    </fragment>
 </navigation>
