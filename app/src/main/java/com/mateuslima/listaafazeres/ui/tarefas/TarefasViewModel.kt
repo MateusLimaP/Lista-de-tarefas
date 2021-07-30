@@ -6,11 +6,13 @@ import com.mateuslima.listaafazeres.data.db.dao.TarefaDao
 import com.mateuslima.listaafazeres.data.db.model.Tarefa
 import com.mateuslima.listaafazeres.data.db.preference.PreferencesManager
 import com.mateuslima.listaafazeres.data.db.preference.PreferencesManager.Organizar.*
+import com.mateuslima.listaafazeres.di.ApplicationScope
 import com.mateuslima.listaafazeres.util.ORGANIZAR_POR_DATA
 import com.mateuslima.listaafazeres.util.ORGANIZAR_POR_NOME
 import com.mateuslima.listaafazeres.util.TIPO_ADICIONAR_TAREFA
 import com.mateuslima.listaafazeres.util.TIPO_EDITAR_TAREFA
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -23,11 +25,12 @@ import javax.inject.Inject
 @HiltViewModel
 class TarefasViewModel @Inject constructor(
     private val repository: TarefaRepository,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) : ViewModel() {
 
 
-    private val pesquisa = MutableStateFlow("")
+    val pesquisa = MutableStateFlow("")
 
     private val tarefaEventoChannel = Channel<TarefaEvento>()
     private val tarefaEvento = tarefaEventoChannel.receiveAsFlow()
@@ -91,6 +94,10 @@ class TarefasViewModel @Inject constructor(
         return preferencesManager.tarefasPreference.first().hideTask
     }
 
+    fun onClickRemoveTarefaCompleted() = applicationScope.launch {//
+        repository.deletarTarefasCompletas()
+        tarefaEventoChannel.send(TarefaEvento.TarefasExcluidasSucesso)
+    }
 
 
     data class Wrapper<T1, T2>(val v1: T1, val v2: T2)
@@ -98,5 +105,6 @@ class TarefasViewModel @Inject constructor(
     sealed class TarefaEvento{
         data class MostrarDesfazerExclusao(val tarefa: Tarefa) : TarefaEvento()
         data class MostrarConfirmacaoTarefaSalva(val msg: String) : TarefaEvento()
+        object TarefasExcluidasSucesso : TarefaEvento()
     }
 }

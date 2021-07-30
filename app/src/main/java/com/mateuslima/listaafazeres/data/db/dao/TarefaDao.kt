@@ -23,6 +23,9 @@ interface TarefaDao {
     @Query("SELECT * FROM tarefa_table WHERE (completada != :hideComplete OR completada = 0) AND nome LIKE '%' || :pesquisa || '%' ORDER BY importante DESC, criada")
     fun getTarefaPorData(pesquisa: String, hideComplete: Boolean) : Flow<List<Tarefa>>
 
+    @Query("DELETE FROM tarefa_table WHERE completada = 1")
+    suspend fun deletarTarefasCompletas()
+
 
 
 }

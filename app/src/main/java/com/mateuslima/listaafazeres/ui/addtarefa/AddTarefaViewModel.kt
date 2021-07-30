@@ -8,6 +8,8 @@ import com.mateuslima.listaafazeres.data.db.model.Tarefa
 import com.mateuslima.listaafazeres.util.TIPO_ADICIONAR_TAREFA
 import com.mateuslima.listaafazeres.util.TIPO_EDITAR_TAREFA
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,6 +21,9 @@ class AddTarefaViewModel @Inject constructor(
 
     private val tarefa = state.get<Tarefa>("tarefa")
     private val tipo = state.get<String>("tipo")
+
+    private val addTarefaChannel = Channel<AddTarefaEvent>()
+    val tarefaEvent = addTarefaChannel.receiveAsFlow()
 
     fun nomeTarefa() : String{
         if (tipo == TIPO_EDITAR_TAREFA)
@@ -50,21 +55,22 @@ class AddTarefaViewModel @Inject constructor(
         return "Adicionar Tarefa"
     }
 
-    fun salvarTarefa(nome: String, importante: Boolean, navegacao: (AddTarefaEvent) -> Unit){
-        if (nome.isNotBlank()) {
-            viewModelScope.launch {//
-                if (tipo == TIPO_EDITAR_TAREFA) {
-                    repository.atualizarTarefa(tarefa!!.copy(nome = nome, importante = importante))
-                    navegacao.invoke(AddTarefaEvent.NavegarVoltaComResultado(tipo))
-                }
-                if (tipo == TIPO_ADICIONAR_TAREFA) {
-                    val novaTarefa = Tarefa(nome = nome, importante = importante)
-                    repository.addTarefa(novaTarefa)
-                    navegacao.invoke(AddTarefaEvent.NavegarVoltaComResultado(tipo))
-                }
+    fun salvarTarefa(nome: String, importante: Boolean){
+        viewModelScope.launch {//
+            if (nome.isBlank()){
+                addTarefaChannel.send(AddTarefaEvent.MostrarNomeTarefaVazio("Nome Vazio"))
+                return@launch
             }
-        }else{
-            navegacao.invoke(AddTarefaEvent.MostrarNomeTarefaVazio("Nome vazio"))
+
+            if (tipo == TIPO_EDITAR_TAREFA) {
+                repository.atualizarTarefa(tarefa!!.copy(nome = nome, importante = importante))
+                addTarefaChannel.send(AddTarefaEvent.NavegarVoltaComResultado(tipo))
+            }
+            if (tipo == TIPO_ADICIONAR_TAREFA) {
+                val novaTarefa = Tarefa(nome = nome, importante = importante)
+                repository.addTarefa(novaTarefa)
+                addTarefaChannel.send(AddTarefaEvent.NavegarVoltaComResultado(tipo))
+            }
         }
     }
 

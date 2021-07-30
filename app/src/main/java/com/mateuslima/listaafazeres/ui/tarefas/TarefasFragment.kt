@@ -14,17 +14,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.mateuslima.listaafazeres.R
 import com.mateuslima.listaafazeres.adapter.ItemTouchHelperAdapter
 import com.mateuslima.listaafazeres.adapter.TarefasAdapter
 import com.mateuslima.listaafazeres.adapter.TarefasAdapter.*
 import com.mateuslima.listaafazeres.data.db.model.Tarefa
-import com.mateuslima.listaafazeres.data.db.preference.PreferencesManager
 import com.mateuslima.listaafazeres.databinding.FragmentTarefasBinding
-import com.mateuslima.listaafazeres.ui.tarefas.TarefasViewModel.TarefaEvento
 import com.mateuslima.listaafazeres.ui.tarefas.TarefasViewModel.TarefaEvento.*
+import com.mateuslima.listaafazeres.ui.tarefas.deletarTarefasCompletadas.DeletarTarefasDialog
 import com.mateuslima.listaafazeres.util.TIPO_ADICIONAR_TAREFA
 import com.mateuslima.listaafazeres.util.TIPO_EDITAR_TAREFA
 import com.mateuslima.listaafazeres.util.addOnQueryTextChange
@@ -32,9 +30,7 @@ import com.mateuslima.listaafazeres.util.exhaustive
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener {
@@ -42,6 +38,7 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
     var _binding: FragmentTarefasBinding? = null
     val binding get() = _binding!!
     val viewModel: TarefasViewModel by viewModels()
+    private lateinit var searchView: SearchView
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -76,6 +73,7 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
                 when (event){
                     is MostrarDesfazerExclusao -> snackBarDesfazerExclusao(event.tarefa)
                     is MostrarConfirmacaoTarefaSalva -> mostrarSnackBar(event.msg)
+                    TarefasExcluidasSucesso -> mostrarSnackBar("Excluido com sucesso")
                 }.exhaustive
             }
         }
@@ -85,6 +83,8 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
             viewModel.onAddEditResult(tipoResultado)
 
         }
+
+
 
 
 
@@ -108,8 +108,14 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
         inflater.inflate(R.menu.menu_tarefas, menu)
         super.onCreateOptionsMenu(menu, inflater)
 
-        val menuItem = menu.findItem(R.id.action_pesquisa)
-        val searchView = menuItem.actionView as SearchView
+        val searchItem = menu.findItem(R.id.action_pesquisa)
+        searchView = searchItem.actionView as SearchView
+
+        val query = viewModel.pesquisa.value
+        if (query.isNotBlank()) {
+            searchItem.expandActionView()
+            searchView.setQuery(query, false)
+        }
 
         searchView.addOnQueryTextChange { pesquisa ->
             viewModel.pesquisarTarefa(pesquisa)
@@ -129,8 +135,18 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
             }
             R.id.action_sort_by_name -> viewModel.organizarPorNome()
             R.id.action_sort_by_date -> viewModel.organizarPorData()
+            R.id.action_deletar -> deletarTodasTarefasCompletas()
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun deletarTodasTarefasCompletas(){
+        DeletarTarefasDialog.Builder(requireContext())
+            .titulo("Titulo")
+            .clickConfirmar {
+                viewModel.onClickRemoveTarefaCompleted()
+            }
+            .show()
     }
 
     override fun onDestroyView() {
@@ -154,4 +170,6 @@ class TarefasFragment : Fragment(R.layout.fragment_tarefas), OnItemClickListener
     override fun onTarefaSwiped(tarefa: Tarefa) {
         viewModel.swipeTarefa(tarefa)
     }
+
+
 }

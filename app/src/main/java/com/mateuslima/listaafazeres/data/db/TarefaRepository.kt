@@ -24,6 +24,10 @@ class TarefaRepository @Inject constructor(
         dao.deletarTarefa(tarefa)
     }
 
+    suspend fun deletarTarefasCompletas(){
+        dao.deletarTarefasCompletas()
+    }
+
 
 
     fun getTarefaNome(pesquisa: String, hide: Boolean) : Flow<List<Tarefa>>{
